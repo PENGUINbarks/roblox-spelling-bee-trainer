@@ -1,0 +1,117 @@
+<script>
+// ────────────────────────────────────────────────
+// WORD LIST (your full list - keep this part as is)
+// ────────────────────────────────────────────────
+const rawWordList = `... paste your complete rawWordList string here ...`;
+
+let allWords = rawWordList.split(',').flatMap(item => {
+  const cleaned = item.trim().toLowerCase();
+  return cleaned.includes(' / ') ? cleaned.split(' / ') : [cleaned];
+}).filter(Boolean);
+
+const extraHard = [
+  "antidisestablishmentarianism","floccinaucinihilipilification","supercalifragilisticexpialidocious",
+  "pneumonoultramicroscopicsilicovolcanoconiosis","hippopotomonstrosesquippedaliophobia",
+  "pseudopseudohypoparathyroidism","adrenocorticotrophin","ventriculocisternostomy",
+  "canaliculodacryocystorhinostomy","thyroparathyroidectomize","dichlorodiphenyltrichloroethane",
+  "radioimmunoelectrophoresis","counterimmunoelectrophoresis","gastrointestinal",
+  "electroencephalograph","otorhinolaryngologist","psychoneuroimmunology",
+  "hepaticocholangiocholecystenterostomy","oligonucleotide"
+];
+
+allWords = [...new Set([...allWords, ...extraHard])];
+
+const wordsByLevel = {
+  1: allWords.filter(w => w.length <= 5),
+  2: allWords.filter(w => w.length >= 6 && w.length <= 8),
+  3: allWords.filter(w => w.length >= 9 && w.length <= 11),
+  4: allWords.filter(w => w.length >= 12 || /ph|ch|x|z/.test(w)),
+  5: allWords.filter(w => w.length >= 14 || w.includes("psych") || w.includes("electro")),
+  6: allWords.filter(w => w.length >= 18 || w.includes("immuno") || w.includes("anti") || w.includes("pseudo")),
+  7: allWords.filter(w => w.length >= 25 || w.includes("chargogg") || w.includes("flocci") || w.includes("pneumono"))
+};
+
+// ────────────────────────────────────────────────
+// STATE VARIABLES
+// ────────────────────────────────────────────────
+let selectedLevel = 1;
+let selectedMode = "practice";
+let selectedProgressive = true;
+let selectedTimerOn = true;
+let selectedTimerSeconds = 6;
+
+let customWords = [];
+
+let gameStarted = false;
+let currentWord = "";
+let streak = 0;
+let score = 0;
+let totalAttempts = 0;
+let correctCount = 0;
+let mistakes = 0;
+let totalCharsTyped = 0;
+let totalCorrectSeconds = 0;
+let timerId = null;
+let timeLeft = 6;
+let startTime = 0;
+let level = 1;
+
+const els = {
+  menuScreen: document.getElementById("menuScreen"),
+  gameScreen: document.getElementById("gameScreen"),
+  restartBtn: document.getElementById("restartBtn"),
+  wordDisplay: document.getElementById("wordDisplay"),
+  answerInput: document.getElementById("answerInput"),
+  streakEl: document.getElementById("streak"),
+  scoreEl: document.getElementById("score"),
+  levelEl: document.getElementById("level"),
+  accEl: document.getElementById("accuracy"),
+  mistakesEl: document.getElementById("mistakes"),
+  wpmEl: document.getElementById("wpm"),
+  modal: document.getElementById("feedbackModal"),
+  modalIcon: document.getElementById("modalIcon"),
+  modalTitle: document.getElementById("modalTitle"),
+  yourTyped: document.getElementById("yourTyped"),
+  modalWord: document.getElementById("modalWord"),
+  timerToggleBtn: document.getElementById("timerToggleBtn"),
+  menuSearchInput: document.getElementById("menuSearchInput"),
+  menuSearchResults: document.getElementById("menuSearchResults"),
+  customListDisplay: document.getElementById("customListDisplay"),
+  customCount: document.getElementById("customCount")
+};
+
+// ────────────────────────────────────────────────
+// ALL FUNCTIONS (defined before use)
+// ────────────────────────────────────────────────
+
+function populateMenuDiffButtons() {
+  const cont = document.getElementById("menuDiffButtons");
+  if (!cont) return; // safety
+
+  cont.innerHTML = "";
+  const labels = ["Beginner","Novice","Moderate","Advanced","Expert","Genius","Master","Randomiser"];
+  const emojis = ["🐣","🌱","🌿","🔥","⚡","🧠","👑","🎲"];
+  for (let i = 1; i <= 8; i++) {
+    const btn = document.createElement("button");
+    btn.innerHTML = emojis[i-1] + "<br>" + labels[i-1];
+    btn.className = `px-6 py-4 rounded-2xl text-sm font-bold transition ${i===selectedLevel ? 'bg-yellow-500 text-black scale-105' : 'bg-zinc-800 hover:bg-zinc-700'}`;
+    btn.onclick = () => {
+      selectedLevel = i;
+      populateMenuDiffButtons();
+    };
+    cont.appendChild(btn);
+  }
+}
+
+// ... (insert all other functions here: setMode, updateMenuTimerValue, menuSearchWords, addToCustom, renderCustomList, removeFromCustom, clearCustomList, startGame, showMenu, speak, getNextWord, nextWord, checkAnswer, startTimer, updateTimerDisplay, toggleTimer, updateStats, hideModal)
+
+// Make sure these two are at the end:
+
+window.onload = () => {
+  populateMenuDiffButtons();       // called here – must be defined above
+  setMode("practice");
+  updateMenuTimerValue();
+  document.getElementById("menuTimerSlider").oninput = updateMenuTimerValue;
+  renderCustomList();
+};
+</script>
