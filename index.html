@@ -1,34 +1,8 @@
-<!DOCTYPE html>
-<html lang="en" class="bg-zinc-950 text-white">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🐝 Spelling Bee Trainer - Roblox Edition</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    body { font-family: 'Press Start 2P', system-ui; }
-    .bee { animation: buzz 0.6s infinite alternate; }
-    @keyframes buzz { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
-    #wordDisplay {
-      font-size: 2.4rem; letter-spacing: 0.15em;
-      word-break: break-all; overflow-wrap: break-word; line-height: 1.3;
-      max-height: 220px; overflow-y: auto;
-    }
-    #wordDisplay.long-word { font-size: 1.7rem; }
-    @media (max-width: 640px) { #wordDisplay { font-size: 1.9rem; } }
-  </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
-
-<!-- ... (HTML structure remains exactly the same as before) ... -->
-
 <script>
-// WORD LIST (unchanged)
-const rawWordList = `... (your full raw word list here - same as before) ...`;
+// ────────────────────────────────────────────────
+// WORD LIST (your full list - keep this part as is)
+// ────────────────────────────────────────────────
+const rawWordList = `... paste your complete rawWordList string here ...`;
 
 let allWords = rawWordList.split(',').flatMap(item => {
   const cleaned = item.trim().toLowerCase();
@@ -58,7 +32,7 @@ const wordsByLevel = {
 };
 
 // ────────────────────────────────────────────────
-// STATE
+// STATE VARIABLES
 // ────────────────────────────────────────────────
 let selectedLevel = 1;
 let selectedMode = "practice";
@@ -75,97 +49,69 @@ let score = 0;
 let totalAttempts = 0;
 let correctCount = 0;
 let mistakes = 0;
-let totalCorrectChars = 0;
-let totalCorrectSeconds = 0;   // only time from correct answers
+let totalCharsTyped = 0;
+let totalCorrectSeconds = 0;
 let timerId = null;
 let timeLeft = 6;
 let startTime = 0;
 let level = 1;
 
 const els = {
-  // ... same as before ...
+  menuScreen: document.getElementById("menuScreen"),
+  gameScreen: document.getElementById("gameScreen"),
+  restartBtn: document.getElementById("restartBtn"),
+  wordDisplay: document.getElementById("wordDisplay"),
+  answerInput: document.getElementById("answerInput"),
+  streakEl: document.getElementById("streak"),
+  scoreEl: document.getElementById("score"),
+  levelEl: document.getElementById("level"),
+  accEl: document.getElementById("accuracy"),
+  mistakesEl: document.getElementById("mistakes"),
+  wpmEl: document.getElementById("wpm"),
+  modal: document.getElementById("feedbackModal"),
+  modalIcon: document.getElementById("modalIcon"),
+  modalTitle: document.getElementById("modalTitle"),
+  yourTyped: document.getElementById("yourTyped"),
+  modalWord: document.getElementById("modalWord"),
+  timerToggleBtn: document.getElementById("timerToggleBtn"),
+  menuSearchInput: document.getElementById("menuSearchInput"),
+  menuSearchResults: document.getElementById("menuSearchResults"),
+  customListDisplay: document.getElementById("customListDisplay"),
+  customCount: document.getElementById("customCount")
 };
 
 // ────────────────────────────────────────────────
-// SPELLING NORMALIZATION (new)
+// ALL FUNCTIONS (defined before use)
 // ────────────────────────────────────────────────
-function normalizeSpelling(word) {
-  return word
-    .replace(/ou?r/g, 'or')           // colour → color, favourite → favorite
-    .replace(/i?se/g, 'ize')          // realise → realize, organise → organize
-    .replace(/re$/g, 'er')            // centre → center, theatre → theater
-    .replace(/ll/g, 'l')              // travelled → traveled, jewellery → jewelry
-    .replace(/og/g, 'og')             // catalogue → catalog (already handled by /ou?r/)
-    .replace(/oe/g, 'o')              // diarrhoea → diarrhea
-    .replace(/ae/g, 'e')              // paedophile → pedophile
-    .replace(/yze/g, 'yze')           // analyse → analyze (keep yze for US)
-    .replace(/yse/g, 'yze');          // analyse → analyze
-}
 
-// ────────────────────────────────────────────────
-// GAME FUNCTIONS (updated)
-// ────────────────────────────────────────────────
-function checkAnswer() {
-  const userAnswer = els.answerInput.value.trim();
-  const userLower = normalizeSpelling(userAnswer.toLowerCase());
-  const correctLower = normalizeSpelling(currentWord.toLowerCase());
-  const isCorrect = userLower === correctLower;
+function populateMenuDiffButtons() {
+  const cont = document.getElementById("menuDiffButtons");
+  if (!cont) return; // safety
 
-  const secondsTaken = (Date.now() - startTime) / 1000;
-
-  totalAttempts++;
-  if (isCorrect) {
-    correctCount++;
-    totalCorrectChars += currentWord.length;
-    totalCorrectSeconds += secondsTaken > 0.5 ? secondsTaken : 0.5; // min 0.5s
-    streak++;
-    score += level * 10 + (selectedTimerOn ? Math.floor(timeLeft * 2) : 5);
-  } else {
-    streak = 0;
-    mistakes++;
+  cont.innerHTML = "";
+  const labels = ["Beginner","Novice","Moderate","Advanced","Expert","Genius","Master","Randomiser"];
+  const emojis = ["🐣","🌱","🌿","🔥","⚡","🧠","👑","🎲"];
+  for (let i = 1; i <= 8; i++) {
+    const btn = document.createElement("button");
+    btn.innerHTML = emojis[i-1] + "<br>" + labels[i-1];
+    btn.className = `px-6 py-4 rounded-2xl text-sm font-bold transition ${i===selectedLevel ? 'bg-yellow-500 text-black scale-105' : 'bg-zinc-800 hover:bg-zinc-700'}`;
+    btn.onclick = () => {
+      selectedLevel = i;
+      populateMenuDiffButtons();
+    };
+    cont.appendChild(btn);
   }
-
-  els.modalIcon.textContent = isCorrect ? "🎉" : "❌";
-  els.modalTitle.textContent = isCorrect ? "CORRECT!" : "WRONG";
-  els.modalTitle.style.color = isCorrect ? "#10b981" : "#ef4444";
-
-  els.yourTyped.innerHTML = `You typed: <span class="${isCorrect ? 'text-emerald-400' : 'text-red-400 line-through'}">${userAnswer.toUpperCase() || "(nothing)"}</span>`;
-  els.modalWord.textContent = currentWord.toUpperCase();
-
-  els.modal.classList.remove("hidden");
-  els.modal.classList.add("flex");
-
-  updateStats();
-  clearInterval(timerId);
 }
 
-function updateStats() {
-  els.streakEl.textContent = streak;
-  els.scoreEl.textContent = score;
-  els.levelEl.textContent = level === 99 ? "CUSTOM" : level;
-  els.mistakesEl.textContent = mistakes;
+// ... (insert all other functions here: setMode, updateMenuTimerValue, menuSearchWords, addToCustom, renderCustomList, removeFromCustom, clearCustomList, startGame, showMenu, speak, getNextWord, nextWord, checkAnswer, startTimer, updateTimerDisplay, toggleTimer, updateStats, hideModal)
 
-  const accuracy = totalAttempts === 0 ? 100 : Math.round((correctCount / totalAttempts) * 100);
-  els.accEl.textContent = accuracy;
+// Make sure these two are at the end:
 
-  let wpm = 0;
-  if (totalCorrectSeconds > 0.5) {
-    const minutes = totalCorrectSeconds / 60;
-    wpm = Math.round((totalCorrectChars / 5) / minutes);
-  }
-  els.wpmEl.textContent = wpm;
-}
-
-// ... all other functions remain the same as in the previous full code ...
-
-// START
 window.onload = () => {
-  populateMenuDiffButtons();
+  populateMenuDiffButtons();       // called here – must be defined above
   setMode("practice");
   updateMenuTimerValue();
   document.getElementById("menuTimerSlider").oninput = updateMenuTimerValue;
   renderCustomList();
 };
 </script>
-</body>
-</html>
