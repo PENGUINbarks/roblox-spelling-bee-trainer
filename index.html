@@ -1,24 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-zinc-950 text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🐝 Spelling Bee Trainer - Roblox Edition</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    body { font-family: 'Press Start 2P', system-ui; }
+    .bee { animation: buzz 0.6s infinite alternate; }
+    @keyframes buzz { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
+    #wordDisplay {
+      font-size: 2.4rem; letter-spacing: 0.15em;
+      word-break: break-all; overflow-wrap: break-word; line-height: 1.3;
+      max-height: 220px; overflow-y: auto;
+    }
+    #wordDisplay.long-word { font-size: 1.7rem; }
+    @media (max-width: 640px) { #wordDisplay { font-size: 1.9rem; } }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
+
+<div class="w-full max-w-4xl bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-yellow-500/50 relative">
+
+  <!-- HEADER WITH YOUR INFO -->
+  <div class="bg-black p-6 flex flex-wrap items-center justify-between gap-4 border-b-4 border-yellow-500/40">
+    <div class="flex flex-col">
+      <div class="flex items-center gap-4">
+        <span class="text-5xl bee">🐝</span>
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-wider text-yellow-400">SPELLING BEE TRAINER</h1>
+          <p class="text-sm text-zinc-400">Created by <strong>RGgamerLETSSrealm1</strong></p>
+          <a href="https://www.roblox.com/users/5086542730/profile" target="_blank" 
+             class="text-sm text-yellow-400 hover:underline">
+            Roblox Profile → (Robux donations appreciated 😄)
+          </a>
+        </div>
+      </div>
+    </div>
+    <button id="restartBtn" onclick="showMenu()" class="px-6 py-3 rounded-2xl font-bold text-sm bg-red-600 hover:bg-red-500 transition hidden">
+      BACK TO MENU
+    </button>
+  </div>
+
+  <!-- MENU SCREEN -->
+  <div id="menuScreen" class="p-8 md:p-12 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold text-yellow-400 mb-10">SETUP YOUR GAME</h2>
+
+    <div class="mb-10">
+      <p class="text-xl font-bold mb-6">DIFFICULTY</p>
+      <div id="menuDiffButtons" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4"></div>
+    </div>
+
+    <div class="mb-10">
+      <p class="text-xl font-bold mb-6">MODE</p>
+      <div class="flex justify-center gap-8 flex-wrap">
+        <button onclick="setMode('practice')" id="menuPracticeBtn" class="px-12 py-6 rounded-2xl font-bold text-2xl bg-yellow-500 text-black scale-105">PRACTICE</button>
+        <button onclick="setMode('master')" id="menuMasterBtn" class="px-12 py-6 rounded-2xl font-bold text-2xl bg-emerald-600 text-white">MASTER</button>
+      </div>
+    </div>
+
+    <div class="mb-12 bg-zinc-950 border border-yellow-500/30 rounded-3xl p-6">
+      <p class="text-xl font-bold mb-4">SEARCH & CUSTOM PRACTICE</p>
+      <div class="flex gap-3 mb-4">
+        <input id="menuSearchInput" type="text" placeholder="Search word..." 
+          class="flex-1 bg-zinc-900 text-xl font-mono py-4 px-6 rounded-2xl border-2 border-yellow-500/50 focus:border-yellow-400 outline-none"
+          onkeydown="if(event.key==='Enter') menuSearchWords()">
+        <button onclick="menuSearchWords()" class="bg-yellow-600 hover:bg-yellow-500 text-black px-8 py-4 rounded-2xl font-bold">SEARCH</button>
+      </div>
+      <div id="menuSearchResults" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-52 overflow-y-auto text-sm"></div>
+
+      <div class="mt-6 border-t border-yellow-500/30 pt-6">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-bold">YOUR CUSTOM LIST (<span id="customCount">0</span>)</span>
+          <button onclick="clearCustomList()" class="text-red-400 text-sm hover:text-red-300">CLEAR ALL</button>
+        </div>
+        <div id="customListDisplay" class="flex flex-wrap gap-2 min-h-[60px]"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <label class="flex flex-col items-center gap-4 cursor-pointer">
+        <span class="text-xl font-bold">PROGRESSIVE RAMP</span>
+        <input type="checkbox" id="menuProgressive" checked class="w-8 h-8 accent-yellow-500">
+      </label>
+
+      <div class="flex flex-col items-center gap-4">
+        <span class="text-xl font-bold">TIMER</span>
+        <div class="flex items-center gap-6">
+          <input type="checkbox" id="menuTimerOn" checked class="w-6 h-6 accent-yellow-500">
+          <input type="range" id="menuTimerSlider" min="3" max="12" value="6" class="accent-yellow-500 w-48">
+          <span id="menuTimerValue" class="font-mono text-2xl">6s</span>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="startGame()" class="mt-12 px-20 py-10 bg-green-600 hover:bg-green-500 text-white font-bold text-4xl rounded-3xl shadow-2xl hover:scale-105 transition">
+      START GAME
+    </button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden">
+    <div class="p-8">
+      <div id="wordDisplay" class="text-center min-h-[160px] flex items-center justify-center font-mono text-yellow-300 bg-zinc-950/70 rounded-3xl border-4 border-dashed border-yellow-500/40 mb-10 px-6 py-8"></div>
+
+      <div class="relative mb-8">
+        <input id="answerInput" type="text" autocomplete="off" autofocus class="w-full bg-black text-5xl font-mono text-center tracking-widest py-6 px-8 rounded-3xl border-4 border-yellow-500 focus:border-white outline-none uppercase" placeholder="TYPE HERE" onkeydown="if(event.key==='Enter') checkAnswer()">
+        <button onclick="checkAnswer()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-2xl font-bold text-xl transition">ENTER</button>
+      </div>
+
+      <div class="flex justify-center gap-6 flex-wrap mb-10">
+        <button onclick="speak()" class="flex items-center gap-3 bg-zinc-800 hover:bg-emerald-800 px-8 py-4 rounded-2xl font-bold transition"><i class="fa-solid fa-volume-high"></i> HEAR</button>
+        <button onclick="nextWord()" class="flex items-center gap-3 bg-zinc-800 hover:bg-purple-800 px-8 py-4 rounded-2xl font-bold transition"><i class="fa-solid fa-forward"></i> SKIP</button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-center">
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">STREAK</div><div id="streak" class="text-4xl font-bold text-emerald-400">0</div></div>
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">SCORE</div><div id="score" class="text-4xl font-bold text-yellow-400">0</div></div>
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">LEVEL</div><div id="level" class="text-4xl font-bold text-purple-400">1</div></div>
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">ACC %</div><div id="accuracy" class="text-4xl font-bold text-sky-400">100</div></div>
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">MISTAKES</div><div id="mistakes" class="text-4xl font-bold text-red-400">0</div></div>
+        <div class="bg-zinc-950/70 rounded-2xl p-4"><div class="text-xs text-zinc-500">WPM</div><div id="wpm" class="text-4xl font-bold text-orange-400">0</div></div>
+      </div>
+    </div>
+
+    <div class="p-6 bg-black flex items-center justify-between text-sm border-t border-zinc-800">
+      <button onclick="showMenu()" class="flex items-center gap-2 text-zinc-400 hover:text-white"><i class="fa-solid fa-rotate-left"></i> MENU</button>
+      <button id="timerToggleBtn" onclick="toggleTimer()" class="flex items-center gap-2 text-emerald-400"><i class="fa-solid fa-clock"></i> TIMER ON</button>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="feedbackModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+  <div class="bg-zinc-900 rounded-3xl p-10 max-w-md w-full text-center border-4 border-yellow-500/30">
+    <div id="modalIcon" class="text-8xl mb-6"></div>
+    <h2 id="modalTitle" class="text-4xl font-bold mb-2"></h2>
+    <div class="my-8 text-left font-mono text-lg">
+      <div class="mb-4">
+        <span class="text-zinc-500">YOU TYPED:</span><br>
+        <span id="yourTyped" class="text-2xl"></span>
+      </div>
+      <div>
+        <span class="text-zinc-500">CORRECT WAS:</span><br>
+        <span id="modalWord" class="text-2xl text-yellow-300"></span>
+      </div>
+    </div>
+    <button onclick="hideModal(); nextWord()" class="w-full py-5 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-2xl rounded-2xl transition">NEXT WORD →</button>
+  </div>
+</div>
+
 <script>
-// ────────────────────────────────────────────────
-// WORD LIST (your full list - keep this part as is)
-// ────────────────────────────────────────────────
-const rawWordList = `... paste your complete rawWordList string here ...`;
+// WORD LIST + LEVELS (same as before)
+const rawWordList = `air / heir, baby, bad, bag, ball / bawl, bar, bat, bee / be, best, big, bird, blue / blew, book, bug, bus, cake, car, cat, cool, cry, cup, dad, dog, duck, eat, elf, end, eye / aye, face, fire, fish / phish, foot, gold, hand, ink, kiss, milk, mix, mom, moon, mug, newb / noob, pie / pi, pink, rain / reign, rat, red / read, ruby, run, sit, size / sighs, snow, soda, star, suck, sun / son, tag, tank, tap, town, tree, water, wind, word, zoo, absorb, angel, ash, bingo, black, boss, brain, burger, burial, cabin, circle, clever, cliff, clutch, comply, convey, crowd, dairy, defy, demon / daemon, echo, emoji, erupt, exert, exile, film, filter, flower / flour, foggy, forbid, gender, ghost, giant, greedy, green, grub, hello, hotel, house, human, hungry, intent, iron, irony, land, length, margin, melt, meow, monk, noble / nobel, orange, pasta, pear / pair, power, prank, pray / prey, proof, quack, queen, quill, rally, random, reply, robust, rot / wrought, shake, shark, sigh / psi, sock, state, stew, still, stumble, trauma, twist, update, vein / vain, walk, way / weigh, white, workout, wrist, abolish, absence, abstract, agaric, agnostic, akin, albeit, alliance, alphabet, anatomical, answer, appetite, armor / armour, atone, automatic, await, bamboo, bayonet, betray, biography, bizarre, breakthrough, broccoli, catalog / catalogue, center / centre, chicken, chronic, church, congratulate, cooking, curious, damage, debris, diesel, dilate, dolphin, enact, excellent, familiar, firefighter, flavor / flavour, formidable, frolic, furious, gallant, gradual, guideline, harbor / harbour, heresy, immobilize / immobilise, integrity, ionize / ionise, lactose, lather, leafy, liable, lightning, magnificent, meditate, normal, oasis, obesity, offender, overdue / overdo, paradox, password, pigeon / pidgin, plethora, powder, present, probably, pulsar, pumpkin, pursuit, recipient, refrain, refugee, remarkable, rye / wry, scrutiny, secret, seldom, semicircle, sigma, sleigh / slay, sniffle, special, spooky, strategic, subsidy, swamp, syntax, tangerine, telepathy, thesis, tremendous, twenty, uncomfortable, understand, vague, villain, voluntary, walnut, warrior, window, zombie, abditive, abdomen, abhorrent, abscond, accomplishment, accommodate, accumulation, adolescent, adversity, aegis, aerodynamic, agriculture, apostrophe, articulate, aspiration, assumption, asunder, asthma, atmospheric, beneficiary, benevolence, blizzard, bronchitis, brusque, calibration, candlelight, caustic, champagne, charisma, chlorophyll, christmas, cognitive, colonel / kernel, combustible, commodity, concentration, consumption, contour, controversial, cuisine, dauntless, deployment, derogatory, detrimental, diplomatic, disappointment, disconsolate, division, doctrine, elaborate, embarrassment, embassy, enchantment, encore, endeavor / endeavour, epiphany, epsilon, erratic, euphoria, exaggerate, excalibur, exorcism, expenditure, exponential, extravagant, fantasy, favorable / favourable, featherweight, fictitious, fjord, flamboyant, fluorescent, forthcoming, frostbite, fruition, gastronomic, gazebo, gibberish, gingerbread, glacier, gratitude, gravestone, hailstone, heritage, hexagonal, hibernation, hornswoggle, hourglass, humanitarian, hypothesis, ideological, idiom, imminent, imprisonment, independence, indifference, inhabitant, insinuate, intermediate, intermission, jaded, juxtaposition, kangaroo, languid, legendary, limousine, livery, mathematician, melancholy, metabolism, methodology, microorganism, misconception, mistletoe, multiplication, myopic, nebulous, necromancer, negotiation, neighboring / neighbouring, nonplussed, notorious, obituary, oblivious, opaque, optimism, palatine, pantograph, parallel, participation, passionate, peppermint, periodically, personnel, pestilence, photographer, pomegranate, portfolio, practitioner, predominantly, problematic, proclamation, procrastinate, pronunciation, propaganda, protocol, pygmy, ravenous, recession, reincarnation, reliability, residential, resilience, resurrection, revelation, rhythm, ricochet, sabotage, sachet / sashay, sapphire, scholarship, sentimental, separation, shareholder, significance, skeleton, snowflake, solidarity, spokesperson, steadfast, stereotype, supposedly, surrogate, surveillance, susceptible, syllable, symmetrical, systematic, technological, thesaurus, transaction, translucent, transparency, transportation, unprecedented, validity, venerate, violation, vulnerability, wednesday, wholeheartedly, worthwhile, abacaxi, abasia, acculturate, aforementioned, aggrandize / aggrandise, agoraphobia, agoraphobic, ambidextrous, ambiguous, anaphylactic, anemone, anisosquaric, apocryphal, apothecary, asphyxiation, astigmatism, ataraxy, attorney, bandeau, belvedere, betwixt, blatherskite, bodacious, bogolanfini, brucellosis, bucolic, cacophony, calamitous, calumny, capoeira, capricious, captious, cerulean, charcuterie, chauffeur, chronological, cinematographer, clandestine, coalescence, codicil, colloquialism, comeuppance, commodore, compunction, consanguine, consummate, contradistinguish, correspondence, counterintuitive, culvert, cyrillic, defenestration, deleterious, depilatory, diminution, discombobulate, dodecahedron, eloquent, elysian / elision, epitome, ethnomethodology, extraterrestrial, facsimile, fastidious, fissiparous, flummox, fuchsia, garrulous, gentrification, glaucomatous, glockenspiel, gobbledygook / gobbledegook, grandiloquent, handkerchief, harpsichord, hemoglobin / haemoglobin, heterozygous, hierarchy, homeopathy / homoeopathy, homogeneous, horticulturist, hypermetropia, iconoclast, incandescent, inchoate, incoagulable, indefatigable, ingenious, irascible, isometropia, isthmus, kaleidoscope, latitudinarianism, legislation, lexicography, liaison, loquacious, lugubrious, lymphangiography, macabre, magniloquent, malapropism, martyrdom, mellifluous, menagerie, meretricious, microminiaturisation / microminiaturization, milieu, miniscule / minuscule, miscellaneous, monochromatic, monosyllabic, multidimensionality, municipal, myriad, narcissistic, nauseous, neuroplasticity, nocturne / nocturn, nomenclature, nutritious, obfuscation, onomatopoeia, paradigm, parliamentary, chargoggagoggmanchauggagoggchaubunagungamaugg`;
 
 let allWords = rawWordList.split(',').flatMap(item => {
   const cleaned = item.trim().toLowerCase();
   return cleaned.includes(' / ') ? cleaned.split(' / ') : [cleaned];
 }).filter(Boolean);
 
-const extraHard = [
-  "antidisestablishmentarianism","floccinaucinihilipilification","supercalifragilisticexpialidocious",
-  "pneumonoultramicroscopicsilicovolcanoconiosis","hippopotomonstrosesquippedaliophobia",
-  "pseudopseudohypoparathyroidism","adrenocorticotrophin","ventriculocisternostomy",
-  "canaliculodacryocystorhinostomy","thyroparathyroidectomize","dichlorodiphenyltrichloroethane",
-  "radioimmunoelectrophoresis","counterimmunoelectrophoresis","gastrointestinal",
-  "electroencephalograph","otorhinolaryngologist","psychoneuroimmunology",
-  "hepaticocholangiocholecystenterostomy","oligonucleotide"
-];
-
+const extraHard = ["antidisestablishmentarianism","floccinaucinihilipilification","supercalifragilisticexpialidocious","pneumonoultramicroscopicsilicovolcanoconiosis","hippopotomonstrosesquippedaliophobia","pseudopseudohypoparathyroidism","adrenocorticotrophin","ventriculocisternostomy","canaliculodacryocystorhinostomy","thyroparathyroidectomize","dichlorodiphenyltrichloroethane","radioimmunoelectrophoresis","counterimmunoelectrophoresis","gastrointestinal","electroencephalograph","otorhinolaryngologist","psychoneuroimmunology","hepaticocholangiocholecystenterostomy","oligonucleotide"];
 allWords = [...new Set([...allWords, ...extraHard])];
 
 const wordsByLevel = {
@@ -31,9 +176,7 @@ const wordsByLevel = {
   7: allWords.filter(w => w.length >= 25 || w.includes("chargogg") || w.includes("flocci") || w.includes("pneumono"))
 };
 
-// ────────────────────────────────────────────────
-// STATE VARIABLES
-// ────────────────────────────────────────────────
+// STATE
 let selectedLevel = 1;
 let selectedMode = "practice";
 let selectedProgressive = true;
@@ -49,7 +192,7 @@ let score = 0;
 let totalAttempts = 0;
 let correctCount = 0;
 let mistakes = 0;
-let totalCharsTyped = 0;
+let totalCorrectChars = 0;
 let totalCorrectSeconds = 0;
 let timerId = null;
 let timeLeft = 6;
@@ -80,14 +223,22 @@ const els = {
   customCount: document.getElementById("customCount")
 };
 
-// ────────────────────────────────────────────────
-// ALL FUNCTIONS (defined before use)
-// ────────────────────────────────────────────────
+// SPELLING NORMALIZATION
+function normalizeSpelling(word) {
+  return word
+    .replace(/ou?r/g, 'or')
+    .replace(/i?se/g, 'ize')
+    .replace(/re$/g, 'er')
+    .replace(/ll/g, 'l')
+    .replace(/oe/g, 'o')
+    .replace(/ae/g, 'e')
+    .replace(/yse/g, 'yze');
+}
 
+// MENU FUNCTIONS
 function populateMenuDiffButtons() {
   const cont = document.getElementById("menuDiffButtons");
-  if (!cont) return; // safety
-
+  if (!cont) return;
   cont.innerHTML = "";
   const labels = ["Beginner","Novice","Moderate","Advanced","Expert","Genius","Master","Randomiser"];
   const emojis = ["🐣","🌱","🌿","🔥","⚡","🧠","👑","🎲"];
@@ -103,15 +254,235 @@ function populateMenuDiffButtons() {
   }
 }
 
-// ... (insert all other functions here: setMode, updateMenuTimerValue, menuSearchWords, addToCustom, renderCustomList, removeFromCustom, clearCustomList, startGame, showMenu, speak, getNextWord, nextWord, checkAnswer, startTimer, updateTimerDisplay, toggleTimer, updateStats, hideModal)
+function setMode(m) {
+  selectedMode = m;
+  document.getElementById("menuPracticeBtn").className = m === "practice" ? "px-12 py-6 rounded-2xl font-bold text-2xl bg-yellow-500 text-black scale-105" : "px-12 py-6 rounded-2xl font-bold text-2xl bg-zinc-700 hover:bg-zinc-600 transition";
+  document.getElementById("menuMasterBtn").className = m === "master" ? "px-12 py-6 rounded-2xl font-bold text-2xl bg-emerald-600 text-white scale-105" : "px-12 py-6 rounded-2xl font-bold text-2xl bg-zinc-700 hover:bg-zinc-600 transition";
+}
 
-// Make sure these two are at the end:
+function updateMenuTimerValue() {
+  document.getElementById("menuTimerValue").textContent = document.getElementById("menuTimerSlider").value + "s";
+}
 
-window.onload = () => {
-  populateMenuDiffButtons();       // called here – must be defined above
+function menuSearchWords() {
+  const q = els.menuSearchInput.value.trim().toLowerCase();
+  if (!q) return;
+  const matches = allWords.filter(w => w.includes(q)).slice(0, 15);
+  els.menuSearchResults.innerHTML = matches.map(w => `
+    <button onclick="addToCustom('${w}')" class="bg-zinc-800 hover:bg-zinc-700 px-4 py-3 rounded-xl text-left transition-all">${w}</button>
+  `).join("");
+}
+
+function addToCustom(word) {
+  if (!customWords.includes(word)) {
+    customWords.push(word);
+    renderCustomList();
+  }
+}
+
+function renderCustomList() {
+  els.customCount.textContent = customWords.length;
+  els.customListDisplay.innerHTML = customWords.map(w => `
+    <div onclick="removeFromCustom('${w}')" class="bg-zinc-800 hover:bg-red-900 px-4 py-2 rounded-xl cursor-pointer text-sm">${w}</div>
+  `).join("");
+}
+
+function removeFromCustom(word) {
+  customWords = customWords.filter(w => w !== word);
+  renderCustomList();
+}
+
+function clearCustomList() {
+  customWords = [];
+  renderCustomList();
+}
+
+function startGame() {
+  selectedProgressive = document.getElementById("menuProgressive").checked;
+  selectedTimerOn = document.getElementById("menuTimerOn").checked;
+  selectedTimerSeconds = parseInt(document.getElementById("menuTimerSlider").value) || 6;
+
+  els.menuScreen.classList.add("hidden");
+  els.gameScreen.classList.remove("hidden");
+  els.restartBtn.classList.remove("hidden");
+
+  gameStarted = true;
+  streak = score = totalAttempts = correctCount = mistakes = totalCorrectChars = totalCorrectSeconds = 0;
+  level = selectedLevel === 8 ? Math.floor(Math.random() * 7) + 1 : selectedLevel;
+
+  if (customWords.length > 0 && selectedLevel === 8) {
+    level = 99;
+  }
+
+  timeLeft = selectedTimerSeconds;
+
+  nextWord();
+  updateStats();
+}
+
+function showMenu() {
+  gameStarted = false;
+  clearInterval(timerId);
+  els.gameScreen.classList.add("hidden");
+  els.menuScreen.classList.remove("hidden");
+  els.restartBtn.classList.add("hidden");
+  els.modal.classList.add("hidden");
+}
+
+function speak() {
+  if (!currentWord) return;
+  const u = new SpeechSynthesisUtterance(currentWord);
+  u.lang = 'en-US';
+  u.rate = currentWord.length > 15 ? 0.85 : 0.95;
+  u.pitch = 1.0;
+  const voices = speechSynthesis.getVoices();
+  const goodVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Natural')));
+  if (goodVoice) u.voice = goodVoice;
+  speechSynthesis.speak(u);
+}
+
+function getNextWord() {
+  if (level === 99 && customWords.length > 0) {
+    return customWords[Math.floor(Math.random() * customWords.length)];
+  }
+  const pool = wordsByLevel[level] || wordsByLevel[1];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function nextWord() {
+  clearInterval(timerId);
+
+  if (selectedProgressive && streak > 0 && streak % 4 === 0 && level < 7 && level !== 99) {
+    level++;
+  }
+
+  if (selectedLevel === 8 && level !== 99) {
+    level = Math.floor(Math.random() * 7) + 1;
+  }
+
+  currentWord = getNextWord();
+
+  els.wordDisplay.classList.remove("long-word");
+  els.wordDisplay.textContent = currentWord.toUpperCase();
+  if (currentWord.length > 20) els.wordDisplay.classList.add("long-word");
+
+  if (selectedMode !== "practice") {
+    els.wordDisplay.innerHTML = '<span class="text-6xl text-zinc-700">LISTEN ONLY</span>';
+    els.wordDisplay.classList.remove("long-word");
+  }
+
+  els.answerInput.value = "";
+  els.answerInput.focus();
+  startTime = Date.now();
+  updateStats();
+  if (selectedTimerOn) startTimer();
+  speak();
+}
+
+function checkAnswer() {
+  const userAnswer = els.answerInput.value.trim();
+  const userNorm = normalizeSpelling(userAnswer.toLowerCase());
+  const correctNorm = normalizeSpelling(currentWord.toLowerCase());
+  const isCorrect = userNorm === correctNorm;
+
+  const secondsTaken = (Date.now() - startTime) / 1000;
+
+  totalAttempts++;
+  if (isCorrect) {
+    correctCount++;
+    totalCorrectChars += currentWord.length;
+    totalCorrectSeconds += Math.max(secondsTaken, 0.5);
+    streak++;
+    score += level * 10 + (selectedTimerOn ? Math.floor(timeLeft * 2) : 5);
+  } else {
+    streak = 0;
+    mistakes++;
+  }
+
+  els.modalIcon.textContent = isCorrect ? "🎉" : "❌";
+  els.modalTitle.textContent = isCorrect ? "CORRECT!" : "WRONG";
+  els.modalTitle.style.color = isCorrect ? "#10b981" : "#ef4444";
+
+  els.yourTyped.innerHTML = `You typed: <span class="${isCorrect ? 'text-emerald-400' : 'text-red-400 line-through'}">${userAnswer.toUpperCase() || "(nothing)"}</span>`;
+  els.modalWord.textContent = currentWord.toUpperCase();
+
+  els.modal.classList.remove("hidden");
+  els.modal.classList.add("flex");
+
+  updateStats();
+  clearInterval(timerId);
+}
+
+function startTimer() {
+  if (!selectedTimerOn) return;
+  timeLeft = selectedTimerSeconds;
+  updateTimerDisplay();
+
+  timerId = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      mistakes++;
+      streak = 0;
+
+      const partialText = els.answerInput.value.trim();
+      const secondsTaken = (Date.now() - startTime) / 1000;
+      totalCorrectSeconds += Math.max(secondsTaken, 0.5);
+
+      els.modalIcon.textContent = "⏰";
+      els.modalTitle.textContent = "TIME UP";
+      els.modalTitle.style.color = "#f59e0b";
+      els.yourTyped.innerHTML = `You typed: <span class="text-red-400 line-through">${partialText.toUpperCase() || "(nothing)"}</span>`;
+      els.modalWord.textContent = currentWord.toUpperCase();
+      els.modal.classList.remove("hidden");
+      els.modal.classList.add("flex");
+      updateStats();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  els.timerToggleBtn.innerHTML = selectedTimerOn ? `<i class="fa-solid fa-clock"></i> TIMER ON (${timeLeft}s)` : `<i class="fa-solid fa-clock"></i> TIMER OFF`;
+}
+
+function toggleTimer() {
+  selectedTimerOn = !selectedTimerOn;
+  updateTimerDisplay();
+}
+
+function updateStats() {
+  els.streakEl.textContent = streak;
+  els.scoreEl.textContent = score;
+  els.levelEl.textContent = level === 99 ? "CUSTOM" : level;
+  els.mistakesEl.textContent = mistakes;
+
+  const accuracy = totalAttempts === 0 ? 100 : Math.round((correctCount / totalAttempts) * 100);
+  els.accEl.textContent = accuracy;
+
+  let wpm = 0;
+  if (totalCorrectSeconds > 0.5) {
+    const minutes = totalCorrectSeconds / 60;
+    wpm = Math.round((totalCorrectChars / 5) / minutes);
+  }
+  els.wpmEl.textContent = wpm;
+}
+
+function hideModal() {
+  els.modal.classList.add("hidden");
+  els.modal.classList.remove("flex");
+}
+
+// START
+window.onload = function() {
+  populateMenuDiffButtons();
   setMode("practice");
-  updateMenuTimerValue();
-  document.getElementById("menuTimerSlider").oninput = updateMenuTimerValue;
+  document.getElementById("menuTimerValue").textContent = document.getElementById("menuTimerSlider").value + "s";
+  document.getElementById("menuTimerSlider").oninput = function() {
+    document.getElementById("menuTimerValue").textContent = this.value + "s";
+  };
   renderCustomList();
 };
 </script>
+</body>
+</html>
